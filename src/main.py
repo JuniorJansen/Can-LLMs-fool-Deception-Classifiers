@@ -8,7 +8,7 @@ from tqdm import tqdm
 from src.model.classifier import DeceptionClassifier
 from src.data.load_data import load_dataset
 from src.config import DATA_PATH, MAX_ITER, NUM_CANDIDATES, SIMILARITY_THRESHOLD
-from src.attack.paraphraser import Paraphraser
+from src.attack.paraphraser import Paraphraser, ONE_SHOT_EXAMPLES, FEW_SHOT_EXAMPLES
 from src.attack.attack_loop import run_attack
 
 
@@ -16,6 +16,16 @@ STRATEGIES = ["zero_shot", "one_shot", "few_shot"]
 MODELS = ["llama3.2", "mistral", "gemma2:2b", "qwen2.5:7b"]
 N = 100
 SEED = 42
+
+# Source texts used in one-shot/few-shot prompts — must be excluded from test data
+EXAMPLE_TEXTS = set()
+for _examples in list(ONE_SHOT_EXAMPLES.values()) + list(FEW_SHOT_EXAMPLES.values()):
+    for _line in _examples.split("\n"):
+        if _line.startswith("Original"):
+            # Extract the text between the first and last quote
+            _start = _line.index('"') + 1
+            _end = _line.rindex('"')
+            EXAMPLE_TEXTS.add(_line[_start:_end])
 
 
 def sample_balanced(texts, labels, n, seed=SEED):
@@ -155,8 +165,15 @@ def main():
     all_texts, all_labels = load_dataset(DATA_PATH)
     print(f"Dataset size: {len(all_texts)}")
 
+    # Filter out example texts to avoid data leakage
+    filtered = [(t, l) for t, l in zip(all_texts, all_labels) if t not in EXAMPLE_TEXTS]
+    excluded = len(all_texts) - len(filtered)
+    if excluded:
+        print(f"Excluded {excluded} example text(s) from test set to prevent data leakage.")
+    filtered_texts, filtered_labels = zip(*filtered)
+
     print(f"\nSampling {N} balanced samples ({N//2} per class, seed={SEED})...")
-    texts, labels = sample_balanced(all_texts, all_labels, N)
+    texts, labels = sample_balanced(list(filtered_texts), list(filtered_labels), N)
     class_counts = {0: labels.count(0), 1: labels.count(1)}
     print(f"Class distribution: truthful={class_counts[0]}, deceptive={class_counts[1]}")
 
@@ -190,10 +207,12 @@ def main():
             "strategies": {},
         }
 
+        model_safe = model.replace(":", "_")
+
         for strategy in STRATEGIES:
             results, summary = run_experiment(texts, labels, classifier, model, strategy)
 
-            file_path = f"results/{model}_{strategy}.json"
+            file_path = f"results/{model_safe}_{strategy}.json"
             with open(file_path, "w") as f:
                 json.dump(results, f, indent=2)
             print("Saved to:", os.path.abspath(file_path))
@@ -201,7 +220,7 @@ def main():
             overall_summary["strategies"][strategy] = summary
 
         # ===== SAVE SUMMARY =====
-        summary_path = f"results/{model}_summary.json"
+        summary_path = f"results/{model_safe}_summary.json"
         with open(summary_path, "w") as f:
             json.dump(overall_summary, f, indent=2)
         print(f"\nSummary saved to:", os.path.abspath(summary_path))
