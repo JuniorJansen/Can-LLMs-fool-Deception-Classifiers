@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Model weights (too large for git)
+models/**/*.safetensors
+models/**/*.bin
+models/**/*.pt
+
+# HippoCorpus data (see README for how to get it)
+data/
+
+# Local full-results backup
+results_full_local/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

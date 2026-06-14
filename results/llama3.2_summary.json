@@ -1,0 +1,157 @@
+{
+  "model": "llama3.2",
+  "n_samples": 200,
+  "max_iterations": 10,
+  "num_candidates": 5,
+  "similarity_threshold": 0.85,
+  "baseline_accuracy": 0.78,
+  "strategies": {
+    "zero_shot": {
+      "n_samples": 200,
+      "attack_success_rate": 0.37,
+      "confidence_change": {
+        "mean": 0.2304,
+        "median": 0.1022,
+        "std": 0.2651,
+        "min": 0,
+        "max": 0.8935
+      },
+      "semantic_similarity": {
+        "mean": 0.9273,
+        "median": 0.9029,
+        "std": 0.0604,
+        "min": 0.8505,
+        "max": 1.0
+      },
+      "iterations": {
+        "mean": 7.79,
+        "median": 10.0,
+        "std": 3.4182,
+        "min": 1.0,
+        "max": 10.0
+      },
+      "successful_attacks": {
+        "count": 74,
+        "avg_iterations": 4.027,
+        "avg_similarity": 0.8801,
+        "avg_confidence_change": 0.5185
+      },
+      "failed_attacks": {
+        "count": 126,
+        "avg_confidence_change": 0.0612
+      },
+      "per_class": {
+        "truthful": {
+          "n": 84,
+          "asr": 0.2381,
+          "avg_confidence_change": 0.1744,
+          "avg_similarity": 0.9408
+        },
+        "deceptive": {
+          "n": 116,
+          "asr": 0.4655,
+          "avg_confidence_change": 0.271,
+          "avg_similarity": 0.9176
+        }
+      }
+    },
+    "one_shot": {
+      "n_samples": 200,
+      "attack_success_rate": 0.365,
+      "confidence_change": {
+        "mean": 0.2227,
+        "median": 0.0497,
+        "std": 0.2757,
+        "min": 0,
+        "max": 0.9112
+      },
+      "semantic_similarity": {
+        "mean": 0.9306,
+        "median": 0.9122,
+        "std": 0.0629,
+        "min": 0.8502,
+        "max": 1.0
+      },
+      "iterations": {
+        "mean": 7.845,
+        "median": 10.0,
+        "std": 3.3731,
+        "min": 1.0,
+        "max": 10.0
+      },
+      "successful_attacks": {
+        "count": 73,
+        "avg_iterations": 4.0959,
+        "avg_similarity": 0.8777,
+        "avg_confidence_change": 0.5304
+      },
+      "failed_attacks": {
+        "count": 127,
+        "avg_confidence_change": 0.0458
+      },
+      "per_class": {
+        "truthful": {
+          "n": 84,
+          "asr": 0.1071,
+          "avg_confidence_change": 0.0678,
+          "avg_similarity": 0.9635
+        },
+        "deceptive": {
+          "n": 116,
+          "asr": 0.5517,
+          "avg_confidence_change": 0.3348,
+          "avg_similarity": 0.9069
+        }
+      }
+    },
+    "few_shot": {
+      "n_samples": 200,
+      "attack_success_rate": 0.375,
+      "confidence_change": {
+        "mean": 0.2277,
+        "median": 0.1153,
+        "std": 0.2556,
+        "min": 0,
+        "max": 0.8215
+      },
+      "semantic_similarity": {
+        "mean": 0.9242,
+        "median": 0.9039,
+        "std": 0.0604,
+        "min": 0.8501,
+        "max": 1.0
+      },
+      "iterations": {
+        "mean": 7.41,
+        "median": 10.0,
+        "std": 3.67,
+        "min": 1.0,
+        "max": 10.0
+      },
+      "successful_attacks": {
+        "count": 75,
+        "avg_iterations": 3.0933,
+        "avg_similarity": 0.8797,
+        "avg_confidence_change": 0.5063
+      },
+      "failed_attacks": {
+        "count": 125,
+        "avg_confidence_change": 0.0606
+      },
+      "per_class": {
+        "truthful": {
+          "n": 84,
+          "asr": 0.1548,
+          "avg_confidence_change": 0.0963,
+          "avg_similarity": 0.9528
+        },
+        "deceptive": {
+          "n": 116,
+          "asr": 0.5345,
+          "avg_confidence_change": 0.3229,
+          "avg_similarity": 0.9035
+        }
+      }
+    }
+  }
+}

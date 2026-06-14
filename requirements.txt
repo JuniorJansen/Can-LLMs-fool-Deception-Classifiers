@@ -1,0 +1,21 @@
+# Dependencies for the adversarial paraphrase attack pipeline.
+# Tested with the versions pinned below on Python 3.11+.
+
+# Core attack pipeline
+torch==2.11.0
+transformers==5.3.0
+sentence-transformers==5.3.0
+scikit-learn==1.8.0
+pandas==3.0.1
+numpy==2.4.3
+requests==2.32.5
+tqdm==4.67.3
+
+# Statistical analysis (analyze_stats.py)
+scipy==1.17.1
+
+# Result visualisation (make_figures.py)
+matplotlib==3.10.8
+
+# Slide generation (make_presentation.py); optional, not needed to reproduce experiments
+python-pptx==1.0.2
