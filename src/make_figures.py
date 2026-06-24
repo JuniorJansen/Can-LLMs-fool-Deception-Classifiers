@@ -10,6 +10,7 @@ Run from the project root: ``python -m src.make_figures``
 
 import json
 import os
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -55,11 +56,23 @@ plt.rcParams.update({
     "axes.spines.top": False,
     "axes.spines.right": False,
     "axes.labelsize": 11,
-    "axes.titlesize": 12,
     "legend.fontsize": 9,
     "xtick.labelsize": 9,
     "ytick.labelsize": 9,
 })
+
+
+def apa(x, dec=2):
+    """Format a number APA-style: round half up (matching the thesis tables,
+    and robust to float artefacts such as 0.705 being stored as 0.70499...)
+    and strip the leading zero from values that cannot exceed 1 (proportions,
+    ASR, AUC, Cramer's V)."""
+    s = str(Decimal(str(x)).quantize(Decimal(10) ** -dec, rounding=ROUND_HALF_UP))
+    if s.startswith("0."):
+        return s[1:]
+    if s.startswith("-0."):
+        return "-" + s[2:]
+    return s
 
 
 def load(model_key, strategy):
@@ -124,20 +137,18 @@ def fig_asymmetry():
     ax.barh(y, -t2d_vals, color=COL_T2D, label=r"T$\to$D (truthful flipped to deceptive)",
             edgecolor="white", linewidth=0.4)
 
-    # Annotate values
+    # Annotate every value (D->T to the right of its bar, T->D to the left)
     for i, (d, t) in enumerate(zip(d2t_vals, t2d_vals)):
-        if d > 0.05:
-            ax.text(d + 0.015, i, f"{d:.2f}", va="center", ha="left", fontsize=8, color=COL_D2T)
-        if t > 0.05:
-            ax.text(-t - 0.015, i, f"{t:.2f}", va="center", ha="right", fontsize=8, color=COL_T2D)
+        ax.text(d + 0.015, i, apa(d), va="center", ha="left", fontsize=8, color=COL_D2T)
+        ax.text(-t - 0.015, i, apa(t), va="center", ha="right", fontsize=8, color=COL_T2D)
 
     ax.set_yticks(y, labels)
     ax.invert_yaxis()
     ax.axvline(0, color="black", linewidth=0.8)
     ax.set_xlim(-1.0, 1.0)
     ax.set_xticks(np.arange(-1.0, 1.05, 0.25))
-    ax.set_xticklabels([f"{abs(x):.2f}" for x in np.arange(-1.0, 1.05, 0.25)])
-    ax.set_xlabel("Attack success rate")
+    ax.set_xticklabels([apa(abs(x)) for x in np.arange(-1.0, 1.05, 0.25)])
+    ax.set_xlabel("Attack Success Rate")
 
     # Group separators between models
     for i in range(3, len(rows), 3):
@@ -146,8 +157,7 @@ def fig_asymmetry():
     tier_split = len(SMALL_MODELS) * 3 - 0.5
     ax.axhline(tier_split, color="black", linewidth=1.2)
 
-    ax.legend(loc="lower right", frameon=True)
-    ax.set_title("Per-direction attack success rate, by attacker model and prompting strategy")
+    ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=2, frameon=False)
 
     plt.tight_layout()
     plt.savefig(FIGURES_DIR / "asymmetry.pdf", bbox_inches="tight")
@@ -176,13 +186,13 @@ def fig_robust_accuracy():
                       color=colours[j], label=labels_s[j], edgecolor="white", linewidth=0.5)
         for bar in bars:
             h = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width() / 2, h + 0.01, f"{h:.2f}",
+            ax.text(bar.get_x() + bar.get_width() / 2, h + 0.01, apa(h),
                     ha="center", va="bottom", fontsize=7.5)
 
     ax.axhline(BASELINE_ACC, color=COL_BASELINE, linewidth=1.2, linestyle="--",
-               label=f"Baseline ({BASELINE_ACC:.2f})")
+               label=f"Baseline ({apa(BASELINE_ACC)})")
     ax.axhline(CHANCE, color=COL_CHANCE, linewidth=1.2, linestyle=":",
-               label=f"Chance ({CHANCE:.2f})")
+               label=f"Chance ({apa(CHANCE)})")
 
     # Tier separator
     tier_split = len(SMALL_MODELS) - 0.5
@@ -192,12 +202,13 @@ def fig_robust_accuracy():
     ax.text(tier_split + 0.05, 1.02, "larger tier", ha="left", va="bottom",
             fontsize=8, color="black", style="italic")
 
+    yt = np.arange(0.0, 1.01, 0.1)
     ax.set_xticks(x, model_names, rotation=20, ha="right")
-    ax.set_ylabel("Robust accuracy of DistilBERT classifier")
+    ax.set_ylabel("Robust Accuracy of DistilBERT Classifier")
     ax.set_ylim(0.0, 1.08)
-    ax.set_yticks(np.arange(0.0, 1.01, 0.1))
-    ax.legend(loc="lower left", ncol=2, frameon=True)
-    ax.set_title("Robust accuracy under attack, by attacker model and prompting strategy")
+    ax.set_yticks(yt, [apa(v, 1) for v in yt])
+    ax.legend(loc="upper right", frameon=True, facecolor="white",
+              edgecolor="0.8", framealpha=0.95)
 
     plt.tight_layout()
     plt.savefig(FIGURES_DIR / "robust_accuracy.pdf", bbox_inches="tight")
@@ -226,13 +237,13 @@ def fig_robust_auc():
                       color=colours[j], label=labels_s[j], edgecolor="white", linewidth=0.5)
         for bar in bars:
             h = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width() / 2, h + 0.01, f"{h:.2f}",
+            ax.text(bar.get_x() + bar.get_width() / 2, h + 0.01, apa(h),
                     ha="center", va="bottom", fontsize=7.5)
 
     ax.axhline(BASELINE_AUC, color=COL_BASELINE, linewidth=1.2, linestyle="--",
-               label=f"Baseline ({BASELINE_AUC:.3f})")
+               label=f"Baseline ({apa(BASELINE_AUC, 3)})")
     ax.axhline(CHANCE, color=COL_CHANCE, linewidth=1.2, linestyle=":",
-               label=f"Random ranker ({CHANCE:.2f})")
+               label=f"Random ranker ({apa(CHANCE)})")
 
     tier_split = len(SMALL_MODELS) - 0.5
     ax.axvline(tier_split, color="black", linewidth=1.0, alpha=0.4)
@@ -241,12 +252,13 @@ def fig_robust_auc():
     ax.text(tier_split + 0.05, 1.02, "larger tier", ha="left", va="bottom",
             fontsize=8, color="black", style="italic")
 
+    yt = np.arange(0.0, 1.01, 0.1)
     ax.set_xticks(x, model_names, rotation=20, ha="right")
-    ax.set_ylabel("AUC of DistilBERT classifier")
+    ax.set_ylabel("AUC of DistilBERT Classifier")
     ax.set_ylim(0.0, 1.08)
-    ax.set_yticks(np.arange(0.0, 1.01, 0.1))
-    ax.legend(loc="lower left", ncol=2, frameon=True)
-    ax.set_title("AUC under attack, by attacker model and prompting strategy")
+    ax.set_yticks(yt, [apa(v, 1) for v in yt])
+    ax.legend(loc="upper right", frameon=True, facecolor="white",
+              edgecolor="0.8", framealpha=0.95)
 
     plt.tight_layout()
     plt.savefig(FIGURES_DIR / "robust_auc.pdf", bbox_inches="tight")
@@ -280,13 +292,15 @@ def fig_asr_heatmap():
         for j in range(len(STRATEGIES)):
             val = matrix[i, j]
             colour = "white" if val > 0.40 else "black"
-            ax.text(j, i, f"{val:.3f}", ha="center", va="center",
+            ax.text(j, i, apa(val, 2), ha="center", va="center",
                     color=colour, fontsize=10, fontweight="bold")
 
-    ax.set_xlabel("Prompting strategy")
-    ax.set_title("Attack success rate by attacker model and prompting strategy")
+    ax.set_xlabel("Prompting Strategy")
     cbar = plt.colorbar(im, ax=ax, shrink=0.7)
     cbar.set_label("ASR")
+    cticks = cbar.get_ticks()
+    cbar.set_ticks(cticks)
+    cbar.set_ticklabels([apa(t, 2) for t in cticks])
 
     plt.tight_layout()
     plt.savefig(FIGURES_DIR / "asr_heatmap.pdf", bbox_inches="tight")
